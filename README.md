@@ -24,7 +24,7 @@ node002
 ```
 Now run:
 ```
-./gpfs_iops_mon-dashboard-batch.py -n nodes.list -i 2 --per-node --batch-size 90
+./gpfs_iops_mon.py -n nodes.list -i 2 --per-node --batch-size 90
 ```
 
 ```
