@@ -1,8 +1,33 @@
 # GPFS-tools
 
 
+## 1 gpfs_iops_mon-dashboard-batch.py
+
+Rocky Linux 8, Python 3.6 compatible.
+
+Using "mmpmon" command to check the IO performance of client nodes. NB: "mmpmon" command has a hard limit of 96 nodes at a time. With 400+ nodes, needs to 
+make the "mmpmon" call in a batch, like "--batch-size 90", so process 90 nodes at onetime. 
+
+
+Make a nodes.list file, contains the GPFS client nodes, all of them, or you want. You can run command:
+
+```
+/usr/lpp/mmfs/bin/mmlscluser
+```
+to list all these client nodes.
+
+```
+node001
+node002
+...
+
+```
+Now run:
+```
+./gpfs_iops_mon-dashboard-batch.py -n nodes.list -i 2 --per-node --batch-size 90
 ```
 
+```
 GPFS I/O MONITOR
 2026-09-12 17:30:50   interval=2.0s   nodes=404/409   mmpmon=5
 ========================================================================================================================
