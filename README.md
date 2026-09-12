@@ -1,7 +1,7 @@
 # GPFS-tools
 
 
-## 1 gpfs_iops_mon-dashboard-batch.py
+## 1 gpfs_iops_mon.py
 
 Rocky Linux 8, Python 3.6 compatible.
 
