@@ -5,11 +5,11 @@
 
 Rocky Linux 8, Python 3.6 compatible.
 
-Using "mmpmon" command to check the IO performance of client nodes. NB: "mmpmon" command has a hard limit of 96 nodes at a time. With 400+ nodes, needs to 
-make the "mmpmon" call in a batch, like "--batch-size 90", so process 90 nodes at onetime. 
+Using ```"mmpmon"``` command to check the IO performance of client nodes. NB: ```"mmpmon"``` command has a hard limit of ```96``` nodes at a time. With 400+ nodes, needs to 
+make the ```"mmpmon"``` call in a batch, like ```"--batch-size 90"```, so process 90 nodes at onetime. 
 
 
-Make a nodes.list file, contains the GPFS client nodes, all of them, or you want. You can run command:
+Make a ```nodes.list``` file, contains the GPFS client nodes, all of them, or you want. You can run command:
 
 ```
 /usr/lpp/mmfs/bin/mmlscluser
@@ -47,3 +47,5 @@ n/p=page  a=alpha  r=read  w=write  t=total  b=MB/s
 +/-=page size  f=filter  0=nonzero  x=clear  q=quit
 
 ```
+
+Also, the details will be saved in a file: ```gpfs_iops.csv```
