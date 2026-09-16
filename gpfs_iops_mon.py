@@ -111,6 +111,29 @@ def parse_mmpmon(line):
             "bytes_write": int(
                 fields.get("bw", 0)
             ),
+
+            # GPFS mmpmon io_s counters
+            #
+            # _oc_  = opens
+            # _cc_  = closes
+            # _dir_ = readdir
+            # _iu_  = inode updates
+
+            "opens": int(
+                fields.get("oc", 0)
+            ),
+
+            "closes": int(
+                fields.get("cc", 0)
+            ),
+
+            "readdir": int(
+                fields.get("dir", 0)
+            ),
+
+            "inode_updates": int(
+                fields.get("iu", 0)
+            ),
         }
 
     except (ValueError, TypeError):
@@ -155,6 +178,28 @@ def calculate_rates(current, previous):
         previous["bytes_write"]
     )
 
+    # Metadata operation deltas
+
+    opens = (
+        current["opens"] -
+        previous["opens"]
+    )
+
+    closes = (
+        current["closes"] -
+        previous["closes"]
+    )
+
+    readdir = (
+        current["readdir"] -
+        previous["readdir"]
+    )
+
+    inode_updates = (
+        current["inode_updates"] -
+        previous["inode_updates"]
+    )
+
     # Protect against counter resets.
 
     if read_ops < 0:
@@ -168,6 +213,18 @@ def calculate_rates(current, previous):
 
     if write_bytes < 0:
         write_bytes = 0
+
+    if opens < 0:
+        opens = 0
+
+    if closes < 0:
+        closes = 0
+
+    if readdir < 0:
+        readdir = 0
+
+    if inode_updates < 0:
+        inode_updates = 0
 
     read_iops = read_ops / dt
     write_iops = write_ops / dt
@@ -186,6 +243,13 @@ def calculate_rates(current, previous):
         1024.0
     )
 
+    # Metadata operations per second
+
+    opens_rate = opens / dt
+    closes_rate = closes / dt
+    readdir_rate = readdir / dt
+    inode_updates_rate = inode_updates / dt
+
     return {
         "read_iops": read_iops,
         "write_iops": write_iops,
@@ -198,6 +262,11 @@ def calculate_rates(current, previous):
 
         "total_mbps":
             read_mbps + write_mbps,
+
+        "opens": opens_rate,
+        "closes": closes_rate,
+        "readdir": readdir_rate,
+        "inode_updates": inode_updates_rate,
 
         "dt": dt,
     }
@@ -504,6 +573,28 @@ def draw_dashboard(
         for n in all_nodes
     )
 
+    # Metadata cluster totals
+
+    opens = sum(
+        rates[n]["opens"]
+        for n in all_nodes
+    )
+
+    closes = sum(
+        rates[n]["closes"]
+        for n in all_nodes
+    )
+
+    readdir = sum(
+        rates[n]["readdir"]
+        for n in all_nodes
+    )
+
+    inode_updates = sum(
+        rates[n]["inode_updates"]
+        for n in all_nodes
+    )
+
     total_iops = (
         read_iops +
         write_iops
@@ -548,7 +639,7 @@ def draw_dashboard(
         )
 
     print(
-        "=" * min(width, 120)
+        "=" * min(width, 125)
     )
 
     print(
@@ -573,7 +664,31 @@ def draw_dashboard(
     )
 
     print(
-        "=" * min(width, 120)
+        "OPEN   {:>14,.0f} ops/s".format(
+            opens
+        )
+    )
+
+    print(
+        "CLOSE  {:>14,.0f} ops/s".format(
+            closes
+        )
+    )
+
+    print(
+        "READDIR{:>14,.0f} ops/s".format(
+            readdir
+        )
+    )
+
+    print(
+        "INODE  {:>14,.0f} ops/s".format(
+            inode_updates
+        )
+    )
+
+    print(
+        "=" * min(width, 125)
     )
 
     # --------------------------------------------------------------
@@ -604,6 +719,42 @@ def draw_dashboard(
             valid_nodes,
             key=lambda n:
                 rates[n]["total_mbps"],
+            reverse=True
+        )
+
+    elif sort_mode == "opens":
+
+        sorted_nodes = sorted(
+            valid_nodes,
+            key=lambda n:
+                rates[n]["opens"],
+            reverse=True
+        )
+
+    elif sort_mode == "closes":
+
+        sorted_nodes = sorted(
+            valid_nodes,
+            key=lambda n:
+                rates[n]["closes"],
+            reverse=True
+        )
+
+    elif sort_mode == "readdir":
+
+        sorted_nodes = sorted(
+            valid_nodes,
+            key=lambda n:
+                rates[n]["readdir"],
+            reverse=True
+        )
+
+    elif sort_mode == "inode":
+
+        sorted_nodes = sorted(
+            valid_nodes,
+            key=lambda n:
+                rates[n]["inode_updates"],
             reverse=True
         )
 
@@ -678,17 +829,22 @@ def draw_dashboard(
         )
 
     print(
-        "{:<25} {:>12} {:>12} {:>13} {:>12}".format(
+        "{:<25} {:>12} {:>12} {:>13} {:>12} "
+        "{:>10} {:>10} {:>10} {:>12}".format(
             "NODE",
             "READ",
             "WRITE",
             "TOTAL",
-            "MB/s"
+            "MB/s",
+            "OPEN",
+            "CLOSE",
+            "READDIR",
+            "INODE"
         )
     )
 
     print(
-        "-" * min(width, 120)
+        "-" * min(width, 125)
     )
 
     for node in display_nodes:
@@ -700,17 +856,25 @@ def draw_dashboard(
             "{:>12,.0f} "
             "{:>12,.0f} "
             "{:>13,.0f} "
-            "{:>12,.1f}".format(
+            "{:>12,.1f} "
+            "{:>10,.0f} "
+            "{:>10,.0f} "
+            "{:>10,.0f} "
+            "{:>12,.0f}".format(
                 node[:25],
                 r["read_iops"],
                 r["write_iops"],
                 r["total_iops"],
-                r["total_mbps"]
+                r["total_mbps"],
+                r["opens"],
+                r["closes"],
+                r["readdir"],
+                r["inode_updates"]
             )
         )
 
     print(
-        "-" * min(width, 120)
+        "-" * min(width, 125)
     )
 
     print(
@@ -726,6 +890,11 @@ def draw_dashboard(
     print(
         "n/p=page  a=alpha  r=read  "
         "w=write  t=total  b=MB/s"
+    )
+
+    print(
+        "o=opens  c=closes  d=readdir  "
+        "i=inode updates"
     )
 
     print(
@@ -967,6 +1136,10 @@ def main():
                 "read_mbps",
                 "write_mbps",
                 "total_mbps",
+                "opens_per_sec",
+                "closes_per_sec",
+                "readdir_per_sec",
+                "inode_updates_per_sec",
             ])
 
             csv_file.flush()
@@ -1050,6 +1223,26 @@ def main():
                 elif key == "b":
 
                     sort_mode = "mbps"
+                    page = 0
+
+                elif key == "o":
+
+                    sort_mode = "opens"
+                    page = 0
+
+                elif key == "c":
+
+                    sort_mode = "closes"
+                    page = 0
+
+                elif key == "d":
+
+                    sort_mode = "readdir"
+                    page = 0
+
+                elif key == "i":
+
+                    sort_mode = "inode"
                     page = 0
 
                 elif key == "+":
@@ -1215,6 +1408,22 @@ def main():
 
                         "{:.2f}".format(
                             rate["total_mbps"]
+                        ),
+
+                        "{:.2f}".format(
+                            rate["opens"]
+                        ),
+
+                        "{:.2f}".format(
+                            rate["closes"]
+                        ),
+
+                        "{:.2f}".format(
+                            rate["readdir"]
+                        ),
+
+                        "{:.2f}".format(
+                            rate["inode_updates"]
                         ),
                     ])
 
