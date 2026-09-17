@@ -24,7 +24,7 @@ node002
 ```
 Now run:
 ```
-./gpfs_iops_mon.py -n nodes.list -i 2 --per-node --batch-size 90  -o ./gpfs_iops_09-16-full.csv 
+sudo ./gpfs_iops_mon.py -n nodes.list -i 2 --per-node --batch-size 90  -o ./gpfs_iops_09-16-full.csv 
 ```
 
 ```
