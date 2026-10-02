@@ -55,3 +55,12 @@ n/p=page  a=alpha  r=read  w=write  t=total  b=MB/s
 ```
 
 Also, the details will be saved in a file: ```gpfs_iops.csv```
+
+
+
+## 2 gpfs_storage_server_io_perf.py
+
+This scipt is a "top" like command to monitor the IBM ESS storage cluster's IO performance.
+You need to run it on one of the quorum server.
+
+<img width="844" height="136" alt="Screenshot 2026-10-01 at 10 41 58 PM" src="https://github.com/user-attachments/assets/ac6eef5b-63f3-4a3e-8176-fc9f587d9385" />
